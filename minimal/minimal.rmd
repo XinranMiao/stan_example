@@ -1,0 +1,55 @@
+
+```{r}
+library(cmdstanr)
+library(dplyr)
+```
+
+# 1. Generate data
+```{r}
+n <- 100
+p <- 4 # dimension of x
+d <- 2 # dimension of y
+
+x <- matrix(rnorm(n * p), nrow = n)
+beta0 <- matrix(c(1, -1, 1, 0, -3, 1, 0, 0), nrow = p)
+y <- matrix(x %*% beta0, nrow = n) + matrix(rnorm(n * d, sd = .1), nrow = n)
+```
+
+```{r}
+data_list <- list(n = n, p = p, d = d,
+                  x = x, y = y)
+
+```
+
+# 2. Compile model
+```{r}
+model <- cmdstan_model("normal.stan")
+```
+
+# 3. Fit model 
+
+## 3.1 MCMC
+```{r}
+mcmc_fit <- model$sample(data_list)
+mcmc_fit$draws("beta[1,1]")
+mcmc_fit$summary()
+```
+
+
+## 3.2 Point estimate
+```{r}
+opt_fit <- model$optimize(data_list)
+opt_fit$summary()
+```
+
+
+## 3.3 Variational inference
+```{r}
+var_fit <- model$variational(data_list)
+var_fit$summary()
+var_fit$draws("sigmas")
+```
+
+
+
+
